@@ -28,6 +28,11 @@ podAnnotations: {}
 podSecurityContext: {}
   # fsGroup: 2000
 
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+    # maxUnavailable: 1
+
 securityContext: {}
   # capabilities:
   #   drop:
