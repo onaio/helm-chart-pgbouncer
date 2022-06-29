@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: nginx
+  repository: bitnami/pgbouncer
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -36,9 +36,64 @@ securityContext: {}
   # runAsNonRoot: true
   # runAsUser: 1000
 
+containerEnv: {}
+    # Read more about the configurations here:
+    # https://github.com/bitnami/bitnami-docker-pgbouncer#readme
+    # POSTGRESQL_USERNAME: "postgres"
+    # POSTGRESQL_PASSWORD: ""
+    # POSTGRESQL_DATABASE: "postgres"
+    # POSTGRESQL_HOST: "postgresql"
+    # POSTGRESQL_PORT: "5432"
+    # PGBOUNCER_SET_DATABASE_USER: "no"
+    # PGBOUNCER_PORT: "6432"
+    # PGBOUNCER_BIND_ADDRESS: "0.0.0.0"
+    # PGBOUNCER_EXTRA_ARGS: ""
+    # PGBOUNCER_DATABASE: ""
+    # PGBOUNCER_AUTH_USER: ""
+    # PGBOUNCER_AUTH_QUERY: ""
+    # PGBOUNCER_POOL_MODE: "session"
+    # PGBOUNCER_INIT_SLEEP_TIME: "10"
+    # PGBOUNCER_INIT_MAX_RETRIES: "10"
+    # PGBOUNCER_QUERY_WAIT_TIMEOUT: "120"
+    # PGBOUNCER_MAX_CLIENT_CONN: "120"
+    # PGBOUNCER_MAX_DB_CONNECTIONS: "0"
+    # PGBOUNCER_IDLE_TRANSACTION_TIMEOUT: "0.0"
+    # PGBOUNCER_DEFAULT_POOL_SIZE: "20"
+    # PGBOUNCER_MIN_POOL_SIZE: "0"
+    # PGBOUNCER_RESERVE_POOL_SIZE: "0"
+    # PGBOUNCER_SERVER_IDLE_TIMEOUT: "600"
+    # PGBOUNCER_SERVER_RESET_QUERY: "DISCARD ALL"
+    # PGBOUNCER_STATS_USERS: ""
+    # PGBOUNCER_CLIENT_TLS_SSLMODE: "disable"
+    # PGBOUNCER_CLIENT_TLS_CERT_FILE: ""
+    # PGBOUNCER_CLIENT_TLS_KEY_FILE: ""
+    # PGBOUNCER_CLIENT_TLS_CA_FILE: ""
+    # PGBOUNCER_CLIENT_TLS_CIPHERS: "fast"
+    # PGBOUNCER_SERVER_TLS_SSLMODE: "disable"
+    # PGBOUNCER_SERVER_TLS_KEY_FILE: ""
+    # PGBOUNCER_SERVER_TLS_CERT_FILE: ""
+    # PGBOUNCER_SERVER_TLS_CA_FILE: ""
+    # PGBOUNCER_SERVER_TLS_PROTOCOLS: "secure"
+    # PGBOUNCER_SERVER_TLS_CIPHERS: "fast"
+
+tls:
+  enabled: false
+  mountPath: "/etc/pgbouncer/tls"
+  volumeReadOnly: true
+  secretName: "pgbouncer-tls-secrets"
+    # clientCA:
+    # clientCert:
+    # clientKey:
+    # serverCert:
+    # serverKey:
+    # serverCA:
+
+configSecretName: "pgbouncer-config-secrets"
+
 service:
   type: ClusterIP
-  port: 80
+  port: 6432
+  targetPort: 6432
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
