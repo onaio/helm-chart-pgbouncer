@@ -27,24 +27,38 @@ spec:
       serviceAccountName: {{ include "pgbouncer.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if or .Values.tls.enabled .Values.configurationFile.enabled }}
       volumes:
         {{- if .Values.tls.enabled }}
         - name: tls-secrets
           secret:
             secretName: {{ .Values.tls.secretName }}
         {{- end }}
+        {{- if .Values.configurationFile.enabled }}
+        - name: pgbouncer-config
+          secret:
+            secretName: {{ .Values.configSecretName }}-file
+        {{- end }}
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if or .Values.tls.enabled .Values.configurationFile.enabled }}
           volumeMounts:
             {{- if .Values.tls.enabled }}
             - name: tls-secrets
               mountPath: {{ .Values.tls.mountPath }}
               readOnly: {{ .Values.tls.volumeReadOnly }}
             {{- end }}
+            {{- if .Values.configurationFile.enabled }}
+            - name: pgbouncer-config
+              mountPath: {{ .Values.configurationFile.mountPath }}
+              readOnly: {{ .Values.configurationFile.readOnly }}
+            {{- end }}
+          {{- end }}
           ports:
             - name: postgres
               containerPort: {{ .Values.service.targetPort }}
