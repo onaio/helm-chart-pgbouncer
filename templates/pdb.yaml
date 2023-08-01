@@ -1,10 +1,6 @@
 {{- if .Values.podDisruptionBudget.enabled }}
 ---
-{{- if semverCompare ">=1.21" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: policy/v1
-{{- else -}}
-apiVersion: policy/v1beta1
-{{- end }}
 kind: PodDisruptionBudget
 metadata:
   name: {{ include "pgbouncer.fullname" . }}-pdb
