@@ -1,18 +1,77 @@
-# Default values for pgbouncer.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-replicaCount: 1
-
-image:
-  repository: bitnami/pgbouncer
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
-
-imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+image:
+  repository: bitnami/pgbouncer
+  tag: 1.21.0
+  pullPolicy: IfNotPresent
+
+pgbouncer:
+  username: postgres
+  # Provide the actual PostgreSQL password here.
+  # We recommend using a secret to provide the password using the extraSecretConfigs or in an external secret. Use the key POSTGRESQL_PASSWORD key to provide the password.
+  password: ""
+  database: ${PGBOUNCER_DATABASE}
+  postgresqlDatabase: ${PGBOUNCER_DATABASE}
+  host: postgresql
+  port: 5432
+  setDatabaseUser: no
+  setDatabasePassword: no
+  connectQuery: ""
+
+# Add extra enviroment varibles in
+# "KEY": "VALUE"
+extraConfigs: []
+
+# Add extra secret enviroment varibles in
+# "KEY": "VALUE"
+extraSecretConfigs: []
+# use an existing secret for the password. If set to false, extraSecretConfigs will be ignored.
+createExtraConfigsSecret: true
+# set to the name of the secret to use. Make sure the secret exists in the same namespace as the chart is deployed in if createExtraConfigsSecret is set to false.
+extraSecretConfigsSecretName: "pgbouncer-config-secret"
+
+tls:
+  enabled: true
+  certificatesSecret: oaf-tls
+  certFilename: tls.crt
+  certKeyFilename: tls.key
+
+service:
+  port: 6432
+  type: ClusterIP
+
+ingress:
+  enabled: false
+  annotations: {}
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  className: "nginx"
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+replicaCount: 1
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -25,131 +84,15 @@ serviceAccount:
 
 podAnnotations: {}
 
+# podSecurityContext:
+#   fsGroup: 1001
 podSecurityContext: {}
-  # fsGroup: 2000
+
+# imagePullSecrets
+#   - name: myRegistryKeySecretName
+imagePullSecrets: []
 
 podDisruptionBudget:
-  enabled: false
+  enabled: true
   minAvailable: 1
-    # maxUnavailable: 1
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
-configurationFile:
-  enabled: false
-  mountPath: "/bitnami/pgbouncer/conf/"
-  readOnly: true
-  userListContent: |-
-    "postgres" "postgres"
-  configurationFileContent: |-
-    [databases]
-    postgres=host=postgres port=5432 dbname=postgres auth_user=postgres
-
-    [pgbouncer]
-    listen_port=6432
-    listen_addr=0.0.0.0
-    auth_file=/opt/bitnami/pgbouncer/conf/userlist.txt
-    auth_type=md5
-    pidfile=/opt/bitnami/pgbouncer/tmp/pgbouncer.pid
-    logfile=/opt/bitnami/pgbouncer/logs/pgbouncer.log
-    admin_users=postgres
-    stats_users=postgres
-    client_tls_sslmode=disable
-    server_tls_sslmode=disable
-    query_wait_timeout=120
-    pool_mode=transaction
-    max_client_conn=250
-    max_db_connections=0
-    idle_transaction_timeout=0.0
-    server_idle_timeout=600
-    default_pool_size=50
-
-containerEnv: {}
-    # Read more about the configurations here:
-    # https://github.com/bitnami/bitnami-docker-pgbouncer#readme
-    # POSTGRESQL_USERNAME: "postgres"
-    # POSTGRESQL_PASSWORD: ""
-    # POSTGRESQL_DATABASE: "postgres"
-    # POSTGRESQL_HOST: "postgresql"
-    # POSTGRESQL_PORT: "5432"
-    # PGBOUNCER_SET_DATABASE_USER: "no"
-    # PGBOUNCER_PORT: "6432"
-    # PGBOUNCER_BIND_ADDRESS: "0.0.0.0"
-    # PGBOUNCER_EXTRA_ARGS: ""
-    # PGBOUNCER_DATABASE: ""
-    # PGBOUNCER_AUTH_USER: ""
-    # PGBOUNCER_AUTH_QUERY: ""
-    # PGBOUNCER_POOL_MODE: "session"
-    # PGBOUNCER_INIT_SLEEP_TIME: "10"
-    # PGBOUNCER_INIT_MAX_RETRIES: "10"
-    # PGBOUNCER_QUERY_WAIT_TIMEOUT: "120"
-    # PGBOUNCER_MAX_CLIENT_CONN: "120"
-    # PGBOUNCER_MAX_DB_CONNECTIONS: "0"
-    # PGBOUNCER_IDLE_TRANSACTION_TIMEOUT: "0.0"
-    # PGBOUNCER_DEFAULT_POOL_SIZE: "20"
-    # PGBOUNCER_MIN_POOL_SIZE: "0"
-    # PGBOUNCER_RESERVE_POOL_SIZE: "0"
-    # PGBOUNCER_SERVER_IDLE_TIMEOUT: "600"
-    # PGBOUNCER_SERVER_RESET_QUERY: "DISCARD ALL"
-    # PGBOUNCER_STATS_USERS: ""
-    # PGBOUNCER_CLIENT_TLS_SSLMODE: "disable"
-    # PGBOUNCER_CLIENT_TLS_CERT_FILE: ""
-    # PGBOUNCER_CLIENT_TLS_KEY_FILE: ""
-    # PGBOUNCER_CLIENT_TLS_CA_FILE: ""
-    # PGBOUNCER_CLIENT_TLS_CIPHERS: "fast"
-    # PGBOUNCER_SERVER_TLS_SSLMODE: "disable"
-    # PGBOUNCER_SERVER_TLS_KEY_FILE: ""
-    # PGBOUNCER_SERVER_TLS_CERT_FILE: ""
-    # PGBOUNCER_SERVER_TLS_CA_FILE: ""
-    # PGBOUNCER_SERVER_TLS_PROTOCOLS: "secure"
-    # PGBOUNCER_SERVER_TLS_CIPHERS: "fast"
-
-tls:
-  enabled: false
-  mountPath: "/etc/pgbouncer/tls"
-  volumeReadOnly: true
-  secretName: "pgbouncer-tls-secrets"
-    # clientCA:
-    # clientCert:
-    # clientKey:
-    # serverCert:
-    # serverKey:
-    # serverCA:
-
-configSecretName: "pgbouncer-config-secrets"
-
-service:
-  type: ClusterIP
-  port: 6432
-  targetPort: 6432
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
-
-nodeSelector: {}
-
-tolerations: []
-
-affinity: {}
+  maxUnavailable: 0
