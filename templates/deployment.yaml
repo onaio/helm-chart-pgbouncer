@@ -13,8 +13,11 @@ spec:
       {{- include "pgbouncer.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/pgbouncerConfig: {{ .Values.pgbouncer | toJson | sha256sum }}
+        checksum/extraConfigs: {{ .Values.extraConfigs | toJson | sha256sum }}
+        checksum/extraSecretConfigs: {{ .Values.extraSecretConfigs | toJson | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
