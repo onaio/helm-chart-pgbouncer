@@ -96,3 +96,6 @@ podDisruptionBudget:
   enabled: true
   minAvailable: 1
   maxUnavailable: 0
+
+networkPolicy:
+  enabled: false
