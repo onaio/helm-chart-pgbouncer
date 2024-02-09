@@ -3,9 +3,9 @@ kind: Pod
 metadata:
   name: "{{ include "pgbouncer.fullname" . }}-test-connection"
   labels:
-    {{- include "pgbouncer.labels" . | nindent 4 }}
+{{ include "pgbouncer.labels" . | indent 4 }}
   annotations:
-    "helm.sh/hook": test
+    "helm.sh/hook": test-success
 spec:
   containers:
     - name: wget

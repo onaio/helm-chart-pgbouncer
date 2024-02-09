@@ -1,8 +1,8 @@
 {{- if .Values.autoscaling.enabled }}
-{{- $kubeVersion:= substr 0 5 .Capabilities.KubeVersion.Version -}}
-{{- if semverCompare ">=1.23" $kubeVersion -}}
+{{ $kubeVersion := substr 0 5 .Capabilities.KubeVersion.GitVersion }}
+{{- if semverCompare ">=1.23" $kubeVersion }}
 apiVersion: autoscaling/v2
-{{- else -}}
+{{- else }}
 apiVersion: autoscaling/v2beta1
 {{- end }}
 kind: HorizontalPodAutoscaler

@@ -13,8 +13,11 @@ spec:
       {{- include "pgbouncer.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/pgbouncerConfig: {{ .Values.pgbouncer | toJson | sha256sum }}
+        checksum/extraConfigs: {{ .Values.extraConfigs | toJson | sha256sum }}
+        checksum/extraSecretConfigs: {{ .Values.extraSecretConfigs | toJson | sha256sum }}
+      {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
@@ -27,61 +30,32 @@ spec:
       serviceAccountName: {{ include "pgbouncer.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if or .Values.tls.enabled .Values.configurationFile.enabled }}
-      volumes:
-        {{- if .Values.tls.enabled }}
-        - name: tls-secrets
-          secret:
-            secretName: {{ .Values.tls.secretName }}
-        {{- end }}
-        {{- if .Values.configurationFile.enabled }}
-        - name: pgbouncer-config
-          secret:
-            secretName: {{ .Values.configSecretName }}-file
-        {{- end }}
-      {{- end }}
       containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- if or .Values.tls.enabled .Values.configurationFile.enabled }}
-          volumeMounts:
-            {{- if .Values.tls.enabled }}
-            - name: tls-secrets
-              mountPath: {{ .Values.tls.mountPath }}
-              readOnly: {{ .Values.tls.volumeReadOnly }}
-            {{- end }}
-            {{- if .Values.configurationFile.enabled }}
-            - name: pgbouncer-config
-              mountPath: {{ .Values.configurationFile.mountPath }}
-              readOnly: {{ .Values.configurationFile.readOnly }}
-            {{- end }}
-          {{- end }}
-          ports:
-            - name: postgres
-              containerPort: {{ .Values.service.targetPort }}
-              protocol: TCP
-          env:
-            {{- range $key, $value := .Values.containerEnv }}
-            - name: "{{ $key }}"
-              valueFrom:
-                secretKeyRef:
-                  name: "{{ $.Values.configSecretName }}"
-                  key: "{{ $key }}"
-            {{- end }}
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 10 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-pgbouncer-config
+        - secretRef:
+            name: {{ .Values.extraSecretConfigsSecretName }}
+        ports:
+        - containerPort: {{ .Values.service.port }}
+        volumeMounts:
+        {{- if .Values.tls.enabled }}
+        - name: tls-secret
+          mountPath: /etc/pgbouncer/tls
+          readOnly: true
+        {{- end }}
+        {{- if .Values.resources }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        {{- end }}
+      {{- if .Values.tls.enabled }}
+      volumes:
+      - name: tls-secret
+        secret:
+          secretName: {{ .Values.tls.certificatesSecret }}
       {{- end }}
