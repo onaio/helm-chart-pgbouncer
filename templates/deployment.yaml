@@ -28,6 +28,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "pgbouncer.serviceAccountName" . }}
+      # Pod security Standards compliance - explicitly deny host access
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -44,6 +48,12 @@ spec:
         ports:
         - containerPort: {{ .Values.service.port }}
         volumeMounts:
+        - name: conf-volume
+          mountPath: /opt/bitnami/pgbouncer/conf/
+        - name: logs-volume
+          mountPath: /opt/bitnami/pgbouncer/logs/
+        - name: tmp-volume
+          mountPath: /opt/bitnami/pgbouncer/tmp/
         {{- if .Values.tls.enabled }}
         - name: tls-secret
           mountPath: /etc/pgbouncer/tls
@@ -55,6 +65,12 @@ spec:
         {{- end }}
       {{- if .Values.tls.enabled }}
       volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: conf-volume
+        emptyDir: {}
+      - name: logs-volume
+        emptyDir: {}
       - name: tls-secret
         secret:
           secretName: {{ .Values.tls.certificatesSecret }}
